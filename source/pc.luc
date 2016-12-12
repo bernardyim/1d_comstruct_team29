@@ -1,0 +1,28 @@
+module pc (
+    input clk,  // clock
+    input rst,  // reset
+    output pcC[32],
+    output pcN1[32],
+    input pcSel[2],
+    input br[32],
+    output obs[8]
+  ) {
+  
+  dff pcCDff[32](#INIT(0),.clk(clk), .rst(rst));
+  sig pcN[32];
+  
+  always {
+    obs=0;
+    pcC = pcCDff.q;
+    pcN = pcCDff.q + 1;  //pc = pc+1
+    pcN1 = pcN;
+    case (pcSel) {
+      2b00: pcCDff.d = pcN;
+      2b01: pcCDff.d = br; obs=8b01000010;
+      2b10: pcCDff.d = 8; obs=8b10000001;
+      2b11: pcCDff.d = 4;
+      default: pcCDff.d = pcCDff.q;
+    
+    }
+  }
+}

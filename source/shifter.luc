@@ -1,0 +1,22 @@
+module shifter (
+    input a[8], 
+    input b[8], 
+    input alufn[8], 
+    output out[8]
+  ) {
+  sig shiftvalue[3];
+  sig preout[8];
+
+  always {
+    shiftvalue = b[2:0];
+    
+    case(alufn[1:0]) {
+      2b00: preout = a << shiftvalue;
+      2b01: preout = a >> shiftvalue;
+      2b11: preout = $signed(a) >>> shiftvalue;
+      default: preout = 8bXXXXXXXX;
+    }
+    
+    out = preout;
+  }
+}

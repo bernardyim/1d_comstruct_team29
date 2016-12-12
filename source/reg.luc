@@ -1,0 +1,40 @@
+module reg (
+    input clk,  // clock
+    input rst,  // reset
+    input regWE,
+    input regR1A[5],
+    input regR2A[5],
+    output regR1D[32],
+    output regR2D[32],
+    input regW1A[5],
+    input regW1D[32],
+    output obs[32],
+//    output randcounter[32],    //for debug
+    input dinoJumpButton,
+    output dinoPos,
+    output score[32]
+  ) {
+  
+  dff ctr[32][32](#INIT(0), .clk(clk), .rst(rst));
+
+  always {
+    obs=0;
+    dinoPos = ctr.q[16][0];
+    if (dinoJumpButton == 1) ctr.d[20] = 1;
+    
+    if (regWE == 1) {
+      ctr.d[regW1A] = regW1D;
+    }
+        
+    regR1D = ctr.q[regR1A];
+    regR2D = ctr.q[regR2A];
+        
+    obs = ctr.q[8]; 
+//    randcounter= ctr.q[20];  //used to be 21
+    score = ctr.q[17];
+    
+    if (rst){
+        ctr.d = 32x{{32b00}};    // turn LEDs off
+      }
+ }
+}

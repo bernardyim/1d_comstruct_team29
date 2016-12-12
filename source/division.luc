@@ -1,0 +1,25 @@
+module division (
+    input a[8],
+    input b[8],
+    output out[8]
+  ) {
+  sig q[8];//quotient
+  sig r[8];//remainder
+  var i;
+  always {
+    q = 8b00000000;
+    r = 8b00000000;
+    for (i=7;i>=0;i--) {
+      r = r << 1;
+      r[0] = a[i]; 
+      if (r >= b) {
+        r = r - b;
+        q[i] = 1;
+        }
+      out = q;
+  }
+}
+}
+
+
+      

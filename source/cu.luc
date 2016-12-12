@@ -1,0 +1,61 @@
+module cu (
+    input instruction[32],
+    input z[32],
+    output pcSel[2],
+    output alufn[6],
+    output waSel,
+    output regWE,
+    output regR2ASel[5],
+    output regW1DSel[2],
+    output bSel,
+    output ramWE
+  ) {
+  
+  sig opcode[6];
+  sig beqPc[2];
+
+  always {
+    opcode = instruction >> 26;
+    
+    if (opcode == 6b011101) {
+      if (z == 0) {
+        beqPc = 2b00;
+      }
+      else {
+        beqPc = 2b01;
+      }
+    }
+    if (opcode == 6b011110) {
+      if (z == 0) {
+        beqPc = 2b01;
+      }
+      else {
+        beqPc = 2b00;
+      }
+    }
+    
+    case (opcode) {
+      6b011000: pcSel = 2b00; alufn = 6b000000; waSel = 1b0; regWE = 1b1; regR2ASel = 1b0; regW1DSel = 2b11; bSel = 1b1; ramWE = 1b0; //LD 
+      6b011001: pcSel = 2b00; alufn = 6b000000; waSel = 1b0; regWE = 1b0; regR2ASel = 1b1; regW1DSel = 2b00; bSel = 1b1; ramWE = 1b1; //ST
+      6b011101: pcSel = beqPc; alufn = 6b110011; waSel = 1b0; regWE = 1b1; regR2ASel = 1b0; regW1DSel = 2b00; bSel = 1b0; ramWE = 1b0;//BEQ
+      6b011110: pcSel = beqPc; alufn = 6b110011; waSel = 1b0; regWE = 1b1; regR2ASel = 1b0; regW1DSel = 2b00; bSel = 1b0; ramWE = 1b0;//BNE
+      6b100000: pcSel = 2b00; alufn = 6b000000; waSel = 1b0; regWE = 1b1; regR2ASel = 1b0; regW1DSel = 2b01; bSel = 1b0; ramWE = 1b0; //ADD
+      6b100001: pcSel = 2b00; alufn = 6b000001; waSel = 1b0; regWE = 1b1; regR2ASel = 1b0; regW1DSel = 2b01; bSel = 1b0; ramWE = 1b0; //SUB
+      6b100011: pcSel = 2b00; alufn = 6b000101; waSel = 1b0; regWE = 1b1; regR2ASel = 1b0; regW1DSel = 2b01; bSel = 1b0; ramWE = 1b0; //DIV
+      6b100101: pcSel = 2b00; alufn = 6b110101; waSel = 1b0; regWE = 1b1; regR2ASel = 1b0; regW1DSel = 2b01; bSel = 1b0; ramWE = 1b0; //CMPLT
+      6b101000: pcSel = 2b00; alufn = 6b011000; waSel = 1b0; regWE = 1b1; regR2ASel = 1b0; regW1DSel = 2b01; bSel = 1b0; ramWE = 1b0; //AND
+      6b101100: pcSel = 2b00; alufn = 6b100000; waSel = 1b0; regWE = 1b1; regR2ASel = 1b0; regW1DSel = 2b01; bSel = 1b0; ramWE = 1b0; //SHL
+      6b101101: pcSel = 2b00; alufn = 6b100001; waSel = 1b0; regWE = 1b1; regR2ASel = 1b0; regW1DSel = 2b01; bSel = 1b0; ramWE = 1b0; //SHR
+      6b110000: pcSel = 2b00; alufn = 6b000000; waSel = 1b0; regWE = 1b1; regR2ASel = 1b0; regW1DSel = 2b01; bSel = 1b1; ramWE = 1b0; //ADDC
+      6b110001: pcSel = 2b00; alufn = 6b000001; waSel = 1b0; regWE = 1b1; regR2ASel = 1b0; regW1DSel = 2b01; bSel = 1b1; ramWE = 1b0; //SUBC
+      6b110011: pcSel = 2b00; alufn = 6b000101; waSel = 1b0; regWE = 1b1; regR2ASel = 1b0; regW1DSel = 2b01; bSel = 1b1; ramWE = 1b0; //DIVC
+      6b110101: pcSel = 2b00; alufn = 6b110101; waSel = 1b0; regWE = 1b1; regR2ASel = 1b0; regW1DSel = 2b01; bSel = 1b1; ramWE = 1b0; //CMPLTC
+      6b111000: pcSel = 2b00; alufn = 6b011000; waSel = 1b0; regWE = 1b1; regR2ASel = 1b0; regW1DSel = 2b01; bSel = 1b1; ramWE = 1b0; //ANDC
+      6b111100: pcSel = 2b00; alufn = 6b100000; waSel = 1b0; regWE = 1b1; regR2ASel = 1b0; regW1DSel = 2b01; bSel = 1b1; ramWE = 1b0; //SHLC
+      6b111101: pcSel = 2b00; alufn = 6b100001; waSel = 1b0; regWE = 1b1; regR2ASel = 1b0; regW1DSel = 2b01; bSel = 1b1; ramWE = 1b0; //SHRC
+      default: pcSel = 2b10; alufn = 6b000000; waSel = 1b0; regWE = 1b1; regR2ASel = 1b0; regW1DSel = 2b00; bSel = 1b0; ramWE = 1b0;  //ILLOP       
+        
+    }
+    
+  }
+}

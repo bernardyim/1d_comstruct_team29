@@ -1,0 +1,27 @@
+module adder (
+    input a[8], 
+    input b[8], 
+    input alufn[6], 
+    output out[8], 
+    output zout[1], 
+    output vout[1], 
+    output nout[1]
+  ) {
+  sig bxor[8];
+  sig preout[8];
+
+  always {
+    case(alufn[0]) { // a + (-b) = a - b, modifing sign of b to operator sign to perform addition/ subtraction
+      1b1: bxor = -b;
+      1b0: bxor = b;
+      default: bxor = 8bXXXXXXXX;
+    }
+    preout = a + bxor; // calculating result of operator operating on the two operands
+    zout = &(~preout); // calculating if result = 0, then z = 1, else z = 0
+    vout = ((~a[7] & ~bxor[7]) & preout[7])|((a[7] & bxor[7]) & ~preout[7]); // calculating if (operand 1[MSB]=0 and operand 2[MSB]=0 and result[MSB]=1) is true or its inverse is true, then v = 1, else v = 0; check for overflow
+    nout = preout[7]; // calculating if result[MSB]=1, then n = 1, else n = 0; check for negative result
+    
+    out = preout;
+    }
+
+}

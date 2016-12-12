@@ -1,0 +1,67 @@
+module alu (
+    input a[8], 
+    input b[8], 
+    input alufn[6], 
+    output out[8]
+  ) {
+  adder adder;
+  boolean boolean;
+  shifter shifter;
+  compare compare;
+  multiplier multiplier;
+  division division;
+  
+  sig preout[8];
+
+  always {    
+    adder.a = a; // connections start
+    adder.b = b;
+    adder.alufn = alufn;
+    
+    boolean.a = a;
+    boolean.b = b;
+    boolean.alufn = alufn;
+    
+    shifter.a = a;
+    shifter.b = b;
+    shifter.alufn = alufn;
+    
+    compare.zin = adder.zout;
+    compare.vin = adder.vout;
+    compare.nin = adder.nout;
+    compare.alufn = alufn;
+    
+    multiplier.a = a;
+    multiplier.b = b;
+    multiplier.alufn = alufn; // connections end
+    
+    division.a = a;
+    division.b = b;
+    
+    case(alufn[5:4]) { // selects the function to express
+      2b00: if(alufn[2] == 0) {
+          preout = adder.out;
+        }
+        else if(alufn[2] == 1) {
+          if (alufn[0] == 0) {
+          preout = multiplier.out;
+        }
+            else if (alufn[0] == 1) {
+            preout = division.out; 
+          }
+            else {
+            preout = 8bXXXXXXXX;
+          }
+        }
+        else {
+          preout = 8bXXXXXXXX;
+        }
+      2b01: preout = boolean.out;
+      2b10: preout = shifter.out;
+      2b11: preout = compare.out;
+      default: preout = 8b01010101;
+    }
+    
+    out = preout;
+  }
+}

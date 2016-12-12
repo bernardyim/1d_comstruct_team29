@@ -1,0 +1,7 @@
+NET "button" LOC = P50;
+NET "button" IOSTANDARD = LVTTL;
+NET "button" PULLDOWN;
+NET "dinoled" LOC = P140;
+NET "dinoled" IOSTANDARD = LVTTL;
+NET "dinoled" PULLDOWN;
+NET "rstbutt" LOC = P80 | IOSTANDARD = LVTTL | PULLDOWN;

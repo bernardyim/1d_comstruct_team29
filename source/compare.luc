@@ -1,0 +1,23 @@
+module compare (
+    input alufn[6],
+    input zin[1], 
+    input vin[1], 
+    input nin[1], 
+    output out[8]
+  ) {
+  sig muxin1[1];
+  sig muxin2[1];
+  sig muxin3[1];
+  sig muxinall[3];
+  sig preout[8];
+
+  always {
+    muxin1 = zin; // calculating for mux input 1, check if operands are equal
+    muxin2 = vin ^ nin; // calculating for mux input 2, check if operand 1 < operand 2
+    muxin3 = zin | muxin2; // calculating for mux input 3, check if operand 1 <= operand 2
+    muxinall = c{muxin3, muxin2, muxin1}; // connecting mux inputs to mux
+    preout = muxinall[(alufn[2:1]-1)]; // connecting alufn[2:1] to mux selector inputs, selects one boolean result to express
+    
+    out = preout;
+  }
+}

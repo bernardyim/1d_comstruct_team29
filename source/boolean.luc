@@ -1,0 +1,29 @@
+module boolean (
+    input a[8], 
+    input b[8], 
+    input alufn[6], 
+    output out[8]
+  ) {
+  var i;
+  sig ai[1];
+  sig bi[1];
+  sig select[2];
+  sig preout[8];
+
+  always { 
+    for(i = 0; i < 7; i++) { // iterating from bit 0 to bit 8
+      ai = a[i];
+      bi = b[i];
+      select = c{bi, ai}; // connecting operand 1[i] and operand 2[i] to mux selector inputs
+      case(select) { // selects one alufn line to express (alufn encodes the result each selector inputs permutation should have)
+        2b11: preout[i] = alufn[3];
+        2b10: preout[i] = alufn[2];
+        2b01: preout[i] = alufn[1];
+        2b00: preout[i] = alufn[0];
+        default: preout[i] = 1bX;
+      }
+    }
+    
+    out = preout;
+  }
+}

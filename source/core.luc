@@ -1,0 +1,90 @@
+module core (
+    input clk,  // clock
+    input rst,  // reset
+    input jumpDinoButton,
+    output obstacle[32],
+    output dinopos
+  ) {
+  
+  pc pc;  
+  rom rom;
+  cu cu;
+  reg reg;
+  alu alu;
+  
+  sig rc[5];
+  sig ra[5];
+  sig rb[5];
+  sig rl[16];
+  sig rb1[5];
+  sig aluA[32];
+  sig aluB[32];
+  sig aluO[32];
+  
+  .clk(clk) {
+    .rst(rst) {
+      
+    }
+    simple_ram ram (#SIZE(32), #DEPTH($pow(2,8)));
+  }
+  
+  always {
+    rc = rom.instruction[25:21];
+    ra = rom.instruction[20:16];
+    rb = rom.instruction[15:11];
+    rl = rom.instruction[15:0];
+    case (cu.regR2ASel) {
+      1b0: rb1 = rb;
+      1b1: rb1 = rc;
+      default: rb1 = 0;
+    }
+
+    pc.clk = clk;
+    pc.rst = rst;        
+    pc.pcSel = cu.pcSel;
+
+    
+    pc.br[15:0] = rl;  //i changed above in favor of branch method in pc
+    pc.br[31:16] = 0;
+    
+    rom.address = pc.pcC;
+    cu.instruction = rom.instruction;
+    if (reg.regR1D == 0) cu.z = 1;
+    else cu.z = 0;
+    reg.clk = clk;
+    reg.rst = rst;
+    reg.regWE = cu.regWE;
+    reg.regR1A = ra;
+    reg.regR2A = rb1;
+    reg.regW1A = rc;
+    reg.dinoJumpButton = jumpDinoButton;
+    
+    aluA = reg.regR1D;
+    case (cu.bSel) {
+      1b0: aluB = reg.regR2D;
+      1b1: aluB = rl;
+      default: aluB = 0;
+    }
+    
+    alu.alufn = cu.alufn;
+    alu.a = aluA;
+    alu.b = aluB;
+    aluO = alu.out;
+    
+    ram.write_en = cu.ramWE;
+    ram.address = aluO;
+    ram.write_data = reg.regR2D;
+    
+    case (cu.regW1DSel) {
+      2b00: reg.regW1D = pc.pcN1;
+      2b01: reg.regW1D = aluO;
+      2b10: reg.regW1D = ram.read_data;
+      default: reg.regW1D = 32b0;
+    }
+    
+    obstacle[7:0] = reg.obs[7:0];    //used to be reg.obs, debugging
+//    obstacle[15:8] = reg.randcounter[7:0]; // pc.obs;
+    obstacle[23:16] = reg.score;
+    dinopos = reg.dinoPos;
+  }
+}

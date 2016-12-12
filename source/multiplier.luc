@@ -1,0 +1,30 @@
+module multiplier (
+    input a[8],
+    input b[8],
+    input alufn[8], 
+    output out[8]
+  ) {
+  sig shiftvalue[8];
+  var i;
+  sig sum[8][8];//instantiates an array of placeholders for each bit multiplied
+  sig sumofsum[8];//instantiates a placeholder of the multiplier
+  always {
+    for (i=0;i<7;i++){
+        sum[i] = 8b00000000;//sets all elements of array to 0
+    }
+    sumofsum = 8b00000000;
+    for (i=0;i<7;i++){//goes through multiplier b bit by bit
+      if (b[i]==1) {
+        shiftvalue = i;
+        sum[i] = a << shiftvalue;  //shifts(multiplies) for individual bit
+      }
+      else {
+        shiftvalue = 0;
+      }
+    }
+    for (i=0;i<=7;i++){
+    sumofsum = sumofsum + sum[i];//sums all individual multiplied bits together
+    }
+    out = sumofsum;
+  }
+}

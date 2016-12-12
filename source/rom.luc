@@ -1,0 +1,108 @@
+module rom (
+    input address[32],
+    output instruction[32]    
+  ) {
+  
+  var i;
+  sig data[36][32];
+
+  always {
+    for (i = 0; i < 36; i++) {
+      data[i] = 0;
+    }
+  
+    /*
+    //test cases
+    data[0] =   32b11000001000000000000000000101010;  //addc r8 1 |add 1 to r8, which is obstacle register
+    data[1] =   32b01110100010010000000000000000000;  //beq r3 r31 0x0 | branch back to first instruction
+    data[2] =   32b11000001000000000000000000010101;  //addc r8 1 |add 1 to r8, which is obstacle register
+    data[3] =   32b01110100010111110000000000000000;  //beq r3 r31 0x0 | branch back to first instruction
+
+    data[4] =   32b11111101000000000000000000000001;  //illop  
+    //data[1] = 32b11000001000000000000000000101010;  //addc r8 1 |add 1 to r8, which is obstacle register
+    //data[0] = 32b01110100011111110000000000000000;  //beq r3 r31 0x0 | branch back to first instruction
+    //data[2] = 32b11000001000000000000000000001101;  //addc r8 0b1101 |for testing, hopefully it will never get here
+    //data[3] = 32b11111101000000000000000000000001;  //illop  
+
+    */       
+       
+    //permanently assigned registers:
+    //r0      : stores game clock
+    //r8[7:0] : obstacle register
+    //r16[2:0]: Dino position
+    //r17     : score
+    //r18     : difficulty register
+    //r19
+    //r20     : dino jump button buffer
+    //r21     : randcounter
+    //r26     : our dustbin. Use him for branches and throwaway vars
+    //r31     : 0x0 (note, it IS writable. DONT WRITE)
+
+
+    
+    //TODO   
+    //Link Dino position to Dino LEDs
+    //Display score
+    //Reset button to reset everything
+   
+    //CODE:
+   
+    data[0] =  32b11000010000111110000000000000001; // addc r31 1 r16 |initialise dino to pos 1
+    data[1] =  32b11000010101111110000000000001010; // addc r31 10 r21 |initialise randcounter to 11
+    data[2] =  32b11000000000111110000000000000000; // addc r31 0 r0  | Initialise r0 to 0, reset game clock
+    data[3] =  32b11000010100111110000000000000000; // addc r31 0 r20 | Initialise r20 to 0, reset button buffer
+    data[4] =  32b11000000000000000000000000000001; // Set r0 to r0 + 1, increment game clock
+    data[5] =  32b10010111001100100000000000000000; // if r18 < r0 then r25 = 1, if game clock > difficulty then r25 = 1
+    data[6] =  32b01110111010110010000000000000100; // if r25 == 0 then branch to data 4 and save (pc + 4) to r26
+    
+
+    //main game:
+    data[7] =  32b11110101000010000000000000000001;   //shift obstacle right by 1
+    data[8] =  32b11100001001010000000000000000001;   //store obstacle[0] in r9
+    data[9] =  32b11000110011100000000000000000001;   //subc(r16,1,r19)          | r19 will be 0 only if dino is in bit0
+    data[10] = 32b01110111010100110000000000010111;   //beq(r19,data[23],r26)    | if dino is in bit0, check button; else, continue 
+    data[11] = 32b11110110000100000000000000000001;   //shrc(r16,1,r16)          | Dino is not in bit0. Shift it down
+    data[12] = 32b10100001010010011000000000000000;   //and(r9,r16,r10)          | check if dino colides with obstacle[0]
+    data[13] = 32b01111011010010100000000000010110;   //bne(r10,data[22],r26)    | if dino collided with obstacle[0], branch to data[22]  
+    data[14] = 32b11000010001100010000000000000001;   //addc(r17,1,r17)          | increase score by 1
+
+    data[15] = 32b11000010010111110000000001110000;   //addc(r31,96,r18)         | below 3 are for increasing difficulty
+    data[16] = 32b10001110010100101000100000000000;   //div(r18,r17,r18)
+    data[17] = 32b11000010010100100000000000001111;   //addc(r18,31,r18)
+    
+    data[18] = 32b01110111010010000000000000011010;   // beq r8 r26 genobs data[26]        |if obstacles are empty, branch to genobs
+    data[19] = 32b01110111010101010000000000011100;   // beq r21 r26 checkrand  data[28]   |else if randcounter == 0, jump to checkrand
+    data[20] = 32b11000110101101010000000000000001;   // subc r21 r21 1                    |else randcounter--
+    
+    //postgenobs:    
+    data[21] = 32b01110111010111110000000000000010;   //beq(r31,data[2],r26)     | branch back to data[2]
+    //out of loop:
+    data[22] = 32b01110111010111110000000000010110;  //beq(r31,data[22],r26)     | branch into infinite loop
+    //check button:
+    data[23] = 32b01110111010101000000000000001100;  //beq(r20,data[12],r26)     | if button was not pushed, branch back to data[12]
+    data[24] = 32b11110010000100000000000000000001;  //shlc(r16,1,r16)           | else (button was pushed), set dino up
+    data[25] = 32b01110111010111110000000000001100;  //beq(r31,data[12],r26)     | branch back to data[12]
+    
+      
+
+   //genobs:
+    data[26] = 32b11000001000111110000000010000000; //addc r8 r31 0b10000000            |spawn obstacle at bit 7
+    data[27] = 32b01110111010111110000000000010101; //beq r31 r26 postgenobs data[21]   |branch back to postgenobs
+
+
+  //checkrand:
+    data[28] = 32b11110100001010000000000000000110; //SHRC r8 r1 6                      |Shift all obstacles down by 6, store in r1
+    data[29] = 32b01110111010000010000000000011111; //beq r1 r26 genrandobs data[31]    |if (r1 == 0) branch to genrandobs (if there are no obstacles in the last 2 bits)
+    data[30] = 32b01110111010111110000000000010101; //beq r31 r26 postgenobs  data[21]  |else branch back to postgenobs
+
+
+  //genrandobs:
+    data[31] = 32b11000001000010000000000010000000;  //addc r8 r8 0b10000000           |spawn obstacle at bit 7
+    data[32] = 32b11000010101100000000000000001011; //addc r16 r21 11       //use current dino pos as rand counter
+    data[33] = 32b01110111010111110000000000010101; //beq r31 r26 postgenobs  data[21]
+
+    
+    
+    instruction = data[address];
+  }
+}
